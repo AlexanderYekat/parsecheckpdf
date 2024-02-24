@@ -36,7 +36,7 @@ modeopenfile = "w"
 if APPEND_CONST:
     modeopenfile = "a"
 checksfile = open("checks_header.csv", mode=modeopenfile, encoding='utf-8')
-headernamesofchecks = ["fd", "fp", "data", "type", "kassir", "summ", "nal", "beznal"]
+headernamesofchecks = ["fd", "fp", "date", "type", "kassir", "summ", "nal", "beznal"]
 csv_writer_of_checks = csv.DictWriter(checksfile, delimiter = ";", lineterminator="\n", fieldnames=headernamesofchecks)
 if not(APPEND_CONST):
     csv_writer_of_checks.writeheader()
