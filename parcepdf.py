@@ -36,14 +36,14 @@ modeopenfile = "w"
 if APPEND_CONST:
     modeopenfile = "a"
 checksfile = open("checks_header.csv", mode=modeopenfile, encoding='utf-8')
-headernamesofchecks = ["fd", "fp", "type", "kassir", "summ", "nal", "beznal"]
-csv_writer_of_checks = csv.DictWriter(checksfile, delimiter = ";", lineterminator="\r", fieldnames=headernamesofchecks)
+headernamesofchecks = ["fd", "fp", "data", "type", "kassir", "summ", "nal", "beznal"]
+csv_writer_of_checks = csv.DictWriter(checksfile, delimiter = ";", lineterminator="\n", fieldnames=headernamesofchecks)
 if not(APPEND_CONST):
     csv_writer_of_checks.writeheader()
 
 postiotnsfile = open("checks_poss.csv", mode=modeopenfile, encoding='utf-8')
 headernamespostiotns = ["fd", "name", "quant", "price", "nds", "psr", "ppr", "mark"]
-csv_writer_pos = csv.DictWriter(postiotnsfile, delimiter = ";", lineterminator="\r", fieldnames=headernamespostiotns)
+csv_writer_pos = csv.DictWriter(postiotnsfile, delimiter = ";", lineterminator="\n", fieldnames=headernamespostiotns)
 if not(APPEND_CONST):
     csv_writer_pos.writeheader()
 
@@ -144,11 +144,11 @@ for filename in listoffilesname:
             if str.find("Кассир") != -1:
                 strkassir = str.split("Кассир")[1].strip()
                 currHeaderRow.update({"kassir": strkassir})
-            #if str[:4] == "Дата":
-            #    sptempr = str.split(" ")
-            #    strdata = sptempr[1].strip()
+            if str[:4] == "Дата":
+                sptempr = str.split(" ")
+                strdata = sptempr[1].strip()
             #    strtime = sptempr[2].strip()
-            #    currHeaderRow.update({"date": strdata})
+                currHeaderRow.update({"date": strdata})
             #    currHeaderRow.update({"time": strtime})
         if prevState == ParseState.Header and stateCurr == ParseState.Item:
             obrabBeginNewPos = True
