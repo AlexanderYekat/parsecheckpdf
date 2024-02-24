@@ -27,28 +27,51 @@ def pdftojson(pdf_path):
             textofcheck = textofcheck + "\n"+currStr
     return textofcheck
 
+DEBUG_CONST = False
+APPEND_CONST = False
+FDBEGIN_CONST = 0
+FDLESS_CONST = 0
 directory = './inpdf/'
-checksfile = open("checks_header.csv", mode="w", encoding='utf-8')
+modeopenfile = "w"
+if APPEND_CONST:
+    modeopenfile = "a"
+checksfile = open("checks_header.csv", mode=modeopenfile, encoding='utf-8')
 headernamesofchecks = ["fd", "fp", "type", "kassir", "summ", "nal", "beznal"]
 csv_writer_of_checks = csv.DictWriter(checksfile, delimiter = ";", lineterminator="\r", fieldnames=headernamesofchecks)
-csv_writer_of_checks.writeheader()
+if not(APPEND_CONST):
+    csv_writer_of_checks.writeheader()
 
-postiotnsfile = open("checks_poss.csv", mode="w", encoding='utf-8')
+postiotnsfile = open("checks_poss.csv", mode=modeopenfile, encoding='utf-8')
 headernamespostiotns = ["fd", "name", "quant", "price", "nds", "psr", "ppr", "mark"]
 csv_writer_pos = csv.DictWriter(postiotnsfile, delimiter = ";", lineterminator="\r", fieldnames=headernamespostiotns)
-csv_writer_pos.writeheader()
+if not(APPEND_CONST):
+    csv_writer_pos.writeheader()
 
 currNumOfFile = 0
 listoffilesname = os.listdir(directory)
 amountoffiles = len(listoffilesname)
+amountoffilesamount = len(listoffilesname)
+amountPropushc = 0
 for filename in listoffilesname:
-    if currNumOfFile % 100 == 0:
+    f = os.path.join(directory, filename)
+    if not(os.path.isfile(f)):
+        continue
+    posprosh=filename.find("_")
+    numfd = int(filename[:posprosh])
+    #print(numfd)
+    if (FDBEGIN_CONST>0) and (numfd < FDBEGIN_CONST):
+        amountPropushc = amountPropushc +1
+        continue
+    if (FDLESS_CONST>0) and (numfd >= FDLESS_CONST):
+        continue
+    if (amountPropushc > 0) and (amountoffiles == amountoffilesamount):
+        amountoffiles = amountoffiles - amountPropushc
+    if (currNumOfFile % 100 == 0) and (currNumOfFile!=0):
         print("запись на диск...")
         checksfile.flush()
         postiotnsfile.flush()
     currNumOfFile = currNumOfFile + 1
-    f = os.path.join(directory, filename)
-    print("обработка", currNumOfFile, "из", amountoffiles, "имя файла", f)
+    print("обработка", currNumOfFile, "из", amountoffiles, "(", amountoffilesamount, ") имя файла", f)
     textofcheck = pdftojson(f)
     listofstr = textofcheck.split("\n")
     prevState = ParseState.Header
@@ -65,10 +88,13 @@ for filename in listoffilesname:
     currIsNameKodTovara = False
     currIsKodTovara = False
     currIsPPR = False
+    cenaSUUshSkidVtrech = 0
     for str in listofstr:
         stateCurr = stateNew
         if len(str) == 0:
             continue
+        if DEBUG_CONST:
+            print(str)
         obrabBeginNewPos = False
         if stateCurr==ParseState.Header:
             if str.find("Кассир") != -1:
@@ -106,6 +132,10 @@ for filename in listoffilesname:
                 prevWasPPR = True
         #обработка текущего состояния и строки текста для определения типа объекта и его данных
         if stateCurr == ParseState.Header:
+            if str.find("ККААССССООВВЫЫЙЙ")!=-1:
+                print("Ошибка чека")
+                print(textofcheck)
+                exit(0)
             if str[:12] == "КАССОВЫЙ ЧЕК":
                 currHeaderRow.clear()
                 currHeaderRow.update({"type": "приход"})
@@ -128,6 +158,7 @@ for filename in listoffilesname:
                 rowsAll.append(currPosRow.copy())
             #новая позиция    
             currPos=currPos+1
+            cenaSUUshSkidVtrech = 0
             currPosRow.clear()
             #currPosRow = {"name": str, "pos": currPos}
             currPosRow = {"name": str}
@@ -141,7 +172,11 @@ for filename in listoffilesname:
                 strquant = str.split("Количество")[1].strip()
                 currPosRow.update({"quant": strquant})
             if str[:22] == "Цена с учетом скидок и":
+                cenaSUUshSkidVtrech = cenaSUUshSkidVtrech + 1
                 strprice = str.split("Цена с учетом скидок и")[1].strip()
+                #if cenaSUUshSkidVtrech == 1:
+                #    currPosRow.update({"summ": strprice})
+                #if cenaSUUshSkidVtrech == 2:
                 currPosRow.update({"price": strprice})
             if str[:3] == "ПСР":
                 strPSR = str.split("ПСР")[1].strip()
